@@ -4,7 +4,7 @@ import logging
 from argparse import ArgumentParser
 
 def colmap_parser():
-    parser = ArgumentParser("Stage 1: Garment initialization.")
+    parser = ArgumentParser("COLMAP sparse reconstruction arguments.")
     parser.add_argument("--data", "-d", required=True, type=str, help="Folder name inside ./gs2mesh/data/custom/ that contains the data.")
     parser.add_argument("--no_gpu", action='store_true')
     return parser
