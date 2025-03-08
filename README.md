@@ -54,4 +54,5 @@ The listed parameters in the table that follows are of importance, please set th
 | `garment_type`     | The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.                                   | `None`          | Yes       |
 | `mesh_output_path`       | The absolute path to the directory where you require the final(cleaned) garment mesh is to be stored.                                | `None`        | Yes       |
 | `masker_prompt`       | Prompt for GroundingDINO to segment out the garment of intrest. A short description e.g. green dress) suffices.                                | `None`        | Yes       |
-| `TSDF_cleaning_threshold`    | Minimal cluster size for clean mesh. In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce this threshold for small garments, and increase for larger ones.                                      | `100000`      | No       |
+
+Helpful suggestion: In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce the `TSDF_cleaning_threshold` default value for small garments, and increase for larger ones.
