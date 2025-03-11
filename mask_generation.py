@@ -1,4 +1,5 @@
 import os
+import yaml
 import torch
 import argparse
 import numpy as np
@@ -10,47 +11,47 @@ from PIL import Image
 import gs2mesh.third_party.GroundingDINO.groundingdino.util.inference as GD
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-IMAGE_DIR = f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x/Actor01/Sequence1/4x/rgbs'
-OUTPUT_ROOT = '/home/hramzan/Desktop/semester-project/datas/ActorsHQ/Actor01_Sequence1_4x/masks'
+
 
 def build_parser():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--imgs_dir", "-in", required=True, type=str, help="The absolute path to the directory where the CamXXX folders are stored.")
-    # parser.add_argument("--output_root", "-out", required=True, type=str, help="The absolute path to the root of the mask directory where the CamXXX folders are to be created and populated with masks.")
+    # required=True
+    parser.add_argument("--imgs_dir", "-in", default=f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x/Actor01/Sequence1/4x/rgbs', type=str, help="The absolute path to the directory where the CamXXX folders are stored (i.e. path/to/folder that contains Cam001, Cam002, ...).")
+
+    parser.add_argument("--output_root", "-out", default='/home/hramzan/Desktop/semester-project/datas/ActorsHQ/Actor01_Sequence1_4x/masks', type=str, help="The absolute path to the root of the mask directory where the CamXXX folders are to be created and populated with masks (i.e. path/to/folder/masks that will get populated with Cam001, Cam002, ... folders containing mask images).") 
+    
     parser.add_argument("--prompt", "-p", required=True, type=str, help="Prompt for GroundingDINO to locate object (garment) of interest.")
-    parser.add_argument("--box_threshold", type=float, default=0.35, help="GroundingDINO bounding box output threshold.")
-    parser.add_argument("--text_threshold", type=float, default=0.25, help="GroundingDINO prompt output threshold.")
     return parser
 
 
-def generate_masks(args):
+def generate_masks(args, config):
     GD_dir = os.path.join(os.getcwd(), "gs2mesh", 'third_party', 'GroundingDINO')
     GD_model = GD.load_model(os.path.join(GD_dir, 'groundingdino', 'config', 'GroundingDINO_SwinT_OGC.py'), os.path.join(GD_dir, 'weights', 'groundingdino_swint_ogc.pth'))
     predictor = SAM2ImagePredictor.from_pretrained("facebook/sam2-hiera-large", device=device)
 
     # iterate over all folders that start with 'Cam'
-    for cam in os.listdir(IMAGE_DIR):
-        if os.path.isdir(os.path.join(IMAGE_DIR, cam)) and cam.startswith('Cam'):
+    for cam in os.listdir(args.imgs_dir):
+        if os.path.isdir(os.path.join(args.imgs_dir, cam)) and cam in config['portrait_cams']:
             
             # create the destination folder
-            dest_path = os.path.join(OUTPUT_ROOT, cam)
+            dest_path = os.path.join(args.output_root, cam)
             os.makedirs(dest_path, exist_ok=True)
             print(f'\n\nMasking {cam} Images.\nStoring masks in {dest_path}.\n')
 
             # iterate over every JPG image in the folder
-            for img in tqdm(os.listdir(os.path.join(IMAGE_DIR, cam))):
+            for img in tqdm(os.listdir(os.path.join(args.imgs_dir, cam))):
                 if os.path.splitext(img)[-1] not in [".jpg", ".jpeg", ".JPG", ".JPEG"]:
                     continue
 
                 # get bounding box from groundingDINO
-                img_path = os.path.join(IMAGE_DIR, cam, img)
+                img_path = os.path.join(args.imgs_dir, cam, img)
                 image_source, gd_image = GD.load_image(img_path)
                 boxes, logits, phrases = GD.predict(
                     model=GD_model,
                     image=gd_image,
-                    caption=prompt,
-                    box_threshold=box_threshold,
-                    text_threshold=text_threshold
+                    caption=args.prompt,
+                    box_threshold=config['box_threshold'],
+                    text_threshold=config['text_threshold']
                 )
                 
                 h, w, _ = image_source.shape
@@ -81,4 +82,11 @@ def generate_masks(args):
 if __name__ == "__main__":
     parser = build_parser()
     args = parser.parse_args()
-    generate_masks(args)
+
+    # load yaml file
+    with open('config.yaml', 'r') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+    
+    generate_masks(args, config)
+
+    
