@@ -15,11 +15,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def build_parser():
     parser = argparse.ArgumentParser()
-    # required=True
-    parser.add_argument("--imgs_dir", "-in", default=f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x/Actor01/Sequence1/4x/rgbs', type=str, help="The absolute path to the directory where the CamXXX folders are stored (i.e. path/to/folder that contains Cam001, Cam002, ...).")
-
-    parser.add_argument("--output_root", "-out", default='/home/hramzan/Desktop/semester-project/datas/ActorsHQ/Actor01_Sequence1_4x/masks', type=str, help="The absolute path to the root of the mask directory where the CamXXX folders are to be created and populated with masks (i.e. path/to/folder/masks that will get populated with Cam001, Cam002, ... folders containing mask images).") 
-    
+    parser.add_argument("--imgs_dir", "-in", required=True, type=str, help="The absolute path to the directory where the CamXXX folders are stored (i.e. path/to/folder that contains Cam001, Cam002, ...).")
+    parser.add_argument("--output_root", "-out", required=True, type=str, help="The absolute path to the root of the mask directory where the CamXXX folders are to be created and populated with masks (i.e. path/to/folder/masks that will get populated with Cam001, Cam002, ... folders containing mask images).") 
     parser.add_argument("--prompt", "-p", required=True, type=str, help="Prompt for GroundingDINO to locate object (garment) of interest.")
     return parser
 
