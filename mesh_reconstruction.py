@@ -246,7 +246,7 @@ def run_single(args):
 
         # saving the cleaned mesh in desired output directory with required name
         o3d.io.write_triangle_mesh(os.path.join(args.mesh_output_path, 'point_cloud.ply'), tsdf.clean_mesh)
-        print(f"Cleaned mesh point_cloud.ply saved at: {os.path.join(args.mesh_output_path, 'template.obj')}")
+        print(f"Cleaned mesh point_cloud.ply saved at: {os.path.join(args.mesh_output_path, 'point_cloud.ply')}")
         
         # smooth surface remeshing
         mesh = pv.read(os.path.join(renderer.output_dir_root, f'{tsdf.out_name}_cleaned_mesh.ply'))
@@ -257,6 +257,9 @@ def run_single(args):
         # saving the smooth mesh in desired output directory with required name
         remesh.save(os.path.join(args.mesh_output_path, 'template.obj'))
         print(f"Remeshed template.obj saved at: {os.path.join(args.mesh_output_path, 'template.obj')}")
+    
+    os.makedirs(os.path.join(args.mesh_output_path, 'sparse'), exist_ok=True)
+    shutil.copy(f'{colmap_dir}/sparse/0/points3D.bin', f'{args.mesh_output_path}/sparse/points3D.bin')
 
 
 # =============================================================================
