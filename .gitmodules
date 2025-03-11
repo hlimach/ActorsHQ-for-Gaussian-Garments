@@ -1,0 +1,3 @@
+[submodule "gs2mesh"]
+	path = gs2mesh
+	url = https://github.com/yanivw12/gs2mesh

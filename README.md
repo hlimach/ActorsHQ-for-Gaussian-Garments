@@ -1,12 +1,12 @@
-# gs2mesh-for-actorsHQ
+# ActorsHQ for Gaussian Garments
 Repository to use actorsHQ dataset with gs2mesh to reconstruct 3D garment mesh.
 ## Setup
 Start by cloning this repository:
 ```bash
-git clone https://github.com/hlimach/gs2mesh-for-actorsHQ.git
+git clone --recursive git@github.com:hlimach/ActorsHQ-for-Gaussian-Garments.git
 ```
 
-Then clone the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) inside this repo by following the instructions provided on their page for the environment creation & setup.
+Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup.
 ## Data Population
 While inside the `gs2mesh` repo, you need to setup a directory containing the first frame images for a specific subject sequence from actorsHQ that must be reconstructed. 
 ```bash
