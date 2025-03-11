@@ -6,7 +6,10 @@ Start by cloning this repository:
 git clone --recursive git@github.com:hlimach/ActorsHQ-for-Gaussian-Garments.git
 ```
 
-Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup.
+Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup. Then, activate the env and download the additional requirement:
+```bash
+pip install pyacvd
+```
 ## Data Population
 While inside the `gs2mesh` repo, you need to setup a directory containing the first frame images for a specific subject sequence from actorsHQ that must be reconstructed. 
 ```bash

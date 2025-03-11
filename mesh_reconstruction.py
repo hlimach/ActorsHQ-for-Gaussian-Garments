@@ -24,6 +24,10 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import pyacvd
+import pyvista as pv
+import vtk
+vtk.vtkObject.GlobalWarningDisplayOff()
 
 import shutil
 import types
@@ -234,21 +238,26 @@ def run_single(args):
         tsdf.save_mesh()
 
         # =============================================================================
-        #  Clean the mesh using clustering and save the cleaned mesh.
+        #  Cleans the mesh using clustering and saves .ply, then smooth surface remeshing
         # =============================================================================
         
         # original mesh is still available under tsdf.mesh (the cleaned is tsdf.clean_mesh)
         tsdf.clean_mesh()
 
-        # saving the cleaned mesh in desired output directory
-        o3d.io.write_triangle_mesh(os.path.join(args.mesh_output_path, 'template.obj'), tsdf.clean_mesh)
-        print(f"Cleaned mesh .obj saved at: {os.path.join(args.mesh_output_path, 'template.obj')}")
+        # saving the cleaned mesh in desired output directory with required name
+        o3d.io.write_triangle_mesh(os.path.join(args.mesh_output_path, 'point_cloud.ply'), tsdf.clean_mesh)
+        print(f"Cleaned mesh point_cloud.ply saved at: {os.path.join(args.mesh_output_path, 'template.obj')}")
+        
+        # smooth surface remeshing
+        mesh = pv.read(os.path.join(renderer.output_dir_root, f'{tsdf.out_name}_cleaned_mesh.ply'))
+        clus = pyacvd.Clustering(mesh)
+        clus.cluster(8000)
+        remesh = clus.create_mesh()
 
-    # =============================================================================
-    #  Return the path of the cleaned mesh .ply and .obj
-    # =============================================================================
-    
-    return os.path.join(renderer.output_dir_root, f'{tsdf.out_name}_cleaned_mesh.ply')
+        # saving the smooth mesh in desired output directory with required name
+        remesh.save(os.path.join(args.mesh_output_path, 'template.obj'))
+        print(f"Remeshed template.obj saved at: {os.path.join(args.mesh_output_path, 'template.obj')}")
+
 
 # =============================================================================
 #  Main driver code with arguments
