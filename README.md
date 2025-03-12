@@ -1,6 +1,7 @@
 # ActorsHQ for Gaussian Garments
 Repository to use actorsHQ dataset with gs2mesh to reconstruct 3D garment mesh.
 ## Setup
+### Environment
 Start by cloning this repository:
 ```bash
 git clone --recursive git@github.com:hlimach/ActorsHQ-for-Gaussian-Garments.git
@@ -11,6 +12,11 @@ Follow the instructions provided on the official [gs2mesh repo](https://github.c
 pip install pyacvd
 pip install munch
 ```
+### Data
+Please setup the `defaults.py` file with the following data paths:
+- `data_root` : absolute path to the main folder of your ActorsHQ dataset which contains subdirectories of 'Actor0X'.
+- `GG_root` : absolute path to where the Gaussian Garments repository is cloned.
+
 
 **Add information about defaults.py and input data structure expectations.**
 
@@ -51,7 +57,7 @@ subject_sequence/
     |   |   ├── images.bin
     |   |   ├── points3D.txt
     |   └── └── points3D.bin
-    ├──images/     
+    ├── images/     
     |   ├── Cam001.jpg
     |   ├── Cam002.jpg 
     |   └── ...
@@ -64,20 +70,32 @@ The notebook includes helpful visualizations, and allows masking interactively. 
 
 To run the script `mesh_reconstruction.py`:
 ```bash
-python mesh_reconstruction.py --colmap_name <data_name> --garment_type <gtype> --mesh_output_path <abs_path> --masker_prompt <garment_prompt> --skip_video_extraction --skip_colmap --masker_automask
+python mesh_reconstruction.py --subject Actor0X --sequence SequenceX --garment_type Gtype --masker_prompt Prompt --masker_automask 
 ```
-
-The listed parameters in the table that follows are of importance, please set them up according to the provided guidelines. Further parameter details can be found on the [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) under [Custom Data](https://github.com/yanivw12/gs2mesh?tab=readme-ov-file#custom-data), which we suggest checking out as well.
+<details>
+<summary> Parameters (click to expand) </summary>
 
 | Parameter       | Description                                                                 | Default Value | Required |
 |-----------------|-----------------------------------------------------------------------------|---------------|----------|
-| `colmap_name`     | Name of the directory containing the dataset. Corresponds to `data_name` from previous stage.                                | `None`        | Yes      |
-| `garment_type`     | The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.                                   | `None`          | Yes       |
-| `mesh_output_path`       | The absolute path to the directory where you require the final(cleaned) garment mesh is to be stored.                                | `None`        | Yes       |
+| `--subject`  `-s`   | Subject folder name that contains the sequence folders (e.g. Actor06).                                     | `None`        | Yes      |
+| `--sequence`   `-q` | Sequence folder name (e.g. Sequence1).                                  | `None`        | Yes      |
+| `garment_type`   `-g`  | The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.                                   | `None`          | Yes       |
 | `masker_prompt`       | Prompt for GroundingDINO to segment out the garment of intrest. A short description (e.g. green_dress) suffices.                                | `None`        | Yes       |
 
+Further parameter details can be found on the [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) under [Custom Data](https://github.com/yanivw12/gs2mesh?tab=readme-ov-file#custom-data), which we suggest checking out as well.
+</details>
 
-Helpful suggestion: In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce the `TSDF_cleaning_threshold` default value for small garments, and increase for larger ones.
+**Helpful suggestion:** In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce the `TSDF_cleaning_threshold` default value for small garments, and increase for larger ones.
+
+After a successful run, the `DEFAULTS.GG_root/ata/outputs/subject` should contain a `stage1/` subdirectory containing the following:
+```
+stage1/
+    ├── point_cloud.ply
+    ├── template.obj
+    └── sparse/     
+        └── points3D.bin
+```
+These are the minimal output requirements from Stage 1: Mesh Reconstruction, and are imperative to running the subsequent stages of Gaussian Garments.
 
 ## Mask Generation
 Use the script `mask_generation.py` to generate masks based on garment prompt. 

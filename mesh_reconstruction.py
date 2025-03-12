@@ -34,6 +34,9 @@ import types
 from sam2.sam2_video_predictor import SAM2VideoPredictor
 import open3d as o3d
 import sys
+from pathlib import Path
+from defaults import DEFAULTS
+
 gs2mesh_path = os.path.join(os.getcwd(), "gs2mesh")
 
 # Changes the working directory to gs2mesh
@@ -51,16 +54,28 @@ from gs2mesh_utils.masker_utils import init_predictor, Masker
 from gs2mesh_utils.tsdf_utils import TSDF
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-base_dir = os.path.abspath(os.getcwd())
+base_dir = os.path.abspath(os.getcwd()) #os.path.join(os.getcwd(), "gs2mesh")
 
 # =============================================================================
 #  ActorsHQ garment reconstruction specific parameters and functions
 # =============================================================================
 
 def actorshq_params(parser):
+    parser.add_argument("--subject", "-s", required=True, type=str, help="Subject folder name that contains the sequence folders (e.g. Actor06).")
+    
+    parser.add_argument("--sequence", "-q", required=True, type=str, help="Sequence folder name (e.g. Sequence1).")
+    
     parser.add_argument("--garment_type", "-g", required=True, type=str, help="The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.")
-    parser.add_argument("--mesh_output_path", "-m", required=True, type=str, help="The absolute path to the directory where you require the final (cleaned) garment mesh .obj is to be stored.")
     return parser
+
+
+def setup_stage1_outputs(subject):
+    """
+    Creates the stage1 output directory for the given subject and returns the path.
+    """
+    _stage1 = DEFAULTS['output_root'] / subject / 'stage1'
+    _stage1.mkdir(parents=True, exist_ok=True)
+    return _stage1
 
 
 def set_references(garment_type):
@@ -108,12 +123,12 @@ def run_full_masker(orientation, GD_model, renderer, stereo, args, images_dir):
 # =============================================================================
 
 def run_single(args):
-
     TSDF_voxel_length=args.TSDF_voxel/512
     colmap_dir = os.path.abspath(os.path.join(base_dir,'data',args.dataset_name,args.colmap_name))
     
     strings = create_strings(args)
     h_ref, v_ref = set_references(args.garment_type)
+    _stage1 = setup_stage1_outputs(args.subject)
 
     # =============================================================================
     #  Run Gaussian Splatting
@@ -183,8 +198,8 @@ def run_single(args):
                     shutil.copy(src_im, os.path.join(images_dir, subdir_bin, img))
             
             garment_dict = {
-                "vertical": {"subdir": next(dim for dim in subdir_bins if dim.startswith("1022")), "ref": v_ref},
-                "horizontal": {"subdir": next(dim for dim in subdir_bins if dim.startswith("747")), "ref": h_ref},
+                "vertical": {"subdir": next(d for d in subdir_bins if int(d.split('x')[0]) > int(d.split('x')[1])), "ref": v_ref},
+                "horizontal": {"subdir": next(d for d in subdir_bins if int(d.split('x')[0]) < int(d.split('x')[1])), "ref": h_ref},
             }
 
             GD_model, renderer, stereo, args
@@ -213,7 +228,6 @@ def run_single(args):
                 shutil.copy(os.path.join(src_path, 'left_mask.png'), os.path.join(dest_path, 'left_mask.png'))
                 shutil.copy(os.path.join(src_path, 'left_mask.npy'), os.path.join(dest_path, 'left_mask.npy'))
 
-            args.TSDF_use_mask = True
         else:
             print("Automask must be enabled for masking in script mode by setting --masker_automask. Skipping.")
             
@@ -228,13 +242,11 @@ def run_single(args):
         # ================================================================================
         #  Run TSDF. the TSDF class will have an attribute "mesh" with the resulting mesh
         # ================================================================================
-        
         tsdf.run(visualize = False)
 
         # =============================================================================
         #  Save the original mesh before cleaning
         # =============================================================================
-        
         tsdf.save_mesh()
 
         # =============================================================================
@@ -245,8 +257,8 @@ def run_single(args):
         tsdf.clean_mesh()
 
         # saving the cleaned mesh in desired output directory with required name
-        o3d.io.write_triangle_mesh(os.path.join(args.mesh_output_path, 'point_cloud.ply'), tsdf.clean_mesh)
-        print(f"Cleaned mesh point_cloud.ply saved at: {os.path.join(args.mesh_output_path, 'point_cloud.ply')}")
+        o3d.io.write_triangle_mesh(os.path.join(_stage1, 'point_cloud.ply'), tsdf.clean_mesh)
+        print(f"Cleaned mesh saved at: {os.path.join(_stage1, 'point_cloud.ply')}")
         
         # smooth surface remeshing
         mesh = pv.read(os.path.join(renderer.output_dir_root, f'{tsdf.out_name}_cleaned_mesh.ply'))
@@ -255,11 +267,12 @@ def run_single(args):
         remesh = clus.create_mesh()
 
         # saving the smooth mesh in desired output directory with required name
-        remesh.save(os.path.join(args.mesh_output_path, 'template.obj'))
-        print(f"Remeshed template.obj saved at: {os.path.join(args.mesh_output_path, 'template.obj')}")
+        remesh.save(os.path.join(_stage1, 'template.obj'))
+        print(f"Smooth remesh saved at: {os.path.join(_stage1, 'template.obj')}")
     
-    os.makedirs(os.path.join(args.mesh_output_path, 'sparse'), exist_ok=True)
-    shutil.copy(f'{colmap_dir}/sparse/0/points3D.bin', f'{args.mesh_output_path}/sparse/points3D.bin')
+    os.makedirs(os.path.join(_stage1, 'sparse'), exist_ok=True)
+    shutil.copy(f'{colmap_dir}/sparse/0/points3D.bin', f'{_stage1}/sparse/points3D.bin')
+    print(f"Points3D.bin copied to: {os.path.join(_stage1, 'sparse', 'points3D.bin')}\n")
 
 
 # =============================================================================
@@ -275,5 +288,6 @@ if __name__ == "__main__":
             action.required = True
 
     args = parser.parse_args()
-    print(args)
+    args.colmap_name = f"{args.subject}_{args.sequence}"
+    args.TSDF_use_mask = True
     run_single(args)

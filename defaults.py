@@ -11,19 +11,21 @@ DEFAULTS = dict()
 # =============================================================================
 
 if 'borong-System-Product-Name' in hostname:
+    DEFAULTS['GG_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments')
 
     DEFAULTS['data_root'] = Path(f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x')
 
-    DEFAULTS['output_root'] = Path('/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/outputs')
-
 elif 'ohws68' in hostname:
+    DEFAULTS['GG_root'] = Path(f'')
     DEFAULTS['data_root'] = Path(f'')
-    DEFAULTS['output_root'] = Path(f'')
 
 else:
+    DEFAULTS['GG_root'] = Path(f'../Gaussian-Garments')
     DEFAULTS['data_root'] = Path('../Gaussian-Garments/data/input')
-    DEFAULTS['output_root'] = Path('../Gaussian-Garments/data/outputs')
+    
 
+# DO NOT EDIT
+DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
 
 
 # =============================================================================
