@@ -6,39 +6,57 @@ Start by cloning this repository:
 git clone --recursive git@github.com:hlimach/ActorsHQ-for-Gaussian-Garments.git
 ```
 
-Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup. Then, activate the env and download the additional requirement:
+Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup. Then, activate the env and download the additional requirements:
 ```bash
 pip install pyacvd
+pip install munch
 ```
-## Data Population
-While inside the `gs2mesh` repo, you need to setup a directory containing the first frame images for a specific subject sequence from actorsHQ that must be reconstructed. 
+
+**Add information about defaults.py and input data structure expectations.**
+
+## Data Setup & Mesh Initialization
+Run the provided script `mesh_initialization.py`:
 ```bash
-mkdir data
-cd data
-mkdir custom
+python mesh_initialization.py --subject Actor0X --sequence SequenceX
+``` 
+This script prepares the custom data folder for gs2mesh using the provided arguments, exports the calibration data in COLMAP compatible format in 'txt' subdir, and runs our sparse COLMAP reconstruction pipeline. 
+
+**Note:** We use our own COLMAP pipeline because gs2mesh assumes camera extrinsics information is not available, so we use our script instead of relying on their built-in COLMAP pipeline to generate a higher quality sparse mesh and provide gs2mesh with actual camera extrinsics information.
+
+<details>
+<summary> Parameters (click to expand) </summary>
+
+| Parameter       | Description                                                                 | Default Value | Required |
+|-----------------|-----------------------------------------------------------------------------|---------------|----------|
+| `--subject`  `-s`   | Subject folder name that contains the sequence folders (e.g. Actor06).                                     | `None`        | Yes      |
+| `--sequence`   `-q` | Sequence folder name (e.g. Sequence1).                                  | `None`        | Yes      |
+| `--resolution` `-r` | Resolution folder of ActorsHQ images (e.g. 1x).                                         | `4x`    | No       |
+| `--ff` | Frame number to use as the first frame for each camera.                                              | 0 | No |
+| `--no_gpu` | Whether to use GPU for feature extraction and matching.                                    | False           | No       |
+
+</details>
+
+After a successful run, the `gs2mesh/data/custom/` should contain a `subject_sequence/` subdirectory containing the following:
 ```
-Inside the custom folder, you must create a folder with your `data_name` and place the **COLMAP compatible format** of the data. More specifically, the custom folder must contain:
-```
-data_name/
+subject_sequence/
     ├── txt/         
     |   ├── cameras.txt 
     |   ├── images.txt 
     |   └── points3D.txt 
-    └── images/
+    ├── sparse/         
+    |   ├── 0/         
+    |   |   ├── cameras.txt 
+    |   |   ├── cameras.bin 
+    |   |   ├── images.txt 
+    |   |   ├── images.bin
+    |   |   ├── points3D.txt
+    |   └── └── points3D.bin
+    ├──images/     
+    |   ├── Cam001.jpg
+    |   ├── Cam002.jpg 
+    |   └── ...
 ```
-Where the images folder contains RGB images that are the **first** frame from **each** camera for a specific subject sequence from actorsHQ. 
-
-**Note:** the COLMAP compatible format txt folder can be ceated by following the instructions provided in the [official actorsHQ repo](https://github.com/synthesiaresearch/humanrf) using the script under `humanrf/actorshq/toolbox/export_colmap.py`. However, please do note that their extraction script uses 0 indexing for `camera_id` within the first loop (line 14). We changed their code for `camera_lines` (ine 20) and `image_lines` (line 24) to `{camera_id+1}` to avoid errors in subsequent COLMAP scripts.
-
-## Sparse COLMAP reconstruction
-Once the data directory has been setup, run the `sparse_reconstruction.py` script to get the sparse reconstruction of the subject. This is done because gs2mesh assumes camera extrinsics information is not available, so we use our script instead of relying on their built-in COLMAP pipeline to generate a higher quality sparse mesh and provide gs2mesh with actual camera extrinsics information.
-
-```bash
-# optional: --no_gpu to curb GPU usage in COLMAP
-python sparse_reconstruction.py --data <data_name>
-```
-
-This will generate `sparse/` folder inside the data directory  `data_name`, organized to fit the requirements of running subsequent gs2mesh stages. 
+Where the images folder contains the first frame RGB images from each camera for this subject-sequence. Please do not move/ reorganize this folder, as it is imperative to running the subsequent gs2mesh stages. 
 
 ## Mesh Reconstruction
 You may choose to either work with the interactive notebook `actorsHQ_gs2mesh.ipynb`, or run the provided file `mesh_reconstruction.py`.
