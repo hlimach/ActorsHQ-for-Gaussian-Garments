@@ -54,7 +54,7 @@ def export_first_frames(args, _images):
         _images (Path): Path to the 'images' subfolder of the gs2mesh data folder.
     """
 
-    images_root = DEFAULTS['data_root'] / args.subject / args.sequence / args.resolution / 'rgbs'
+    images_root = DEFAULTS['AHQ_data_root'] / args.subject / args.sequence / args.resolution / 'rgbs'
 
     print(f"Copying first frames to {_images}")
     for cam in tqdm(images_root.iterdir()):
@@ -96,7 +96,7 @@ def export_colmap_format(args, _txt):
         _txt (Path): Path to the 'txt' subfolder of the gs2mesh data folder.
     """
 
-    input_csv = DEFAULTS['data_root'] / args.subject / args.sequence / args.resolution / 'calibration.csv'
+    input_csv = DEFAULTS['AHQ_data_root'] / args.subject / args.sequence / args.resolution / 'calibration.csv'
     calibration = pd.read_csv(input_csv, index_col=0)
 
     camera_lines = ""

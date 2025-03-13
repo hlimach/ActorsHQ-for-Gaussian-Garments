@@ -54,7 +54,7 @@ from gs2mesh_utils.masker_utils import init_predictor, Masker
 from gs2mesh_utils.tsdf_utils import TSDF
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-base_dir = os.path.abspath(os.getcwd()) #os.path.join(os.getcwd(), "gs2mesh")
+base_dir = os.path.abspath(os.getcwd())
 
 # =============================================================================
 #  ActorsHQ garment reconstruction specific parameters and functions

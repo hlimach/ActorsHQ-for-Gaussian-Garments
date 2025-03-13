@@ -13,19 +13,14 @@ pip install pyacvd
 pip install munch
 ```
 ### Data
-Please setup the `defaults.py` file with the following data paths:
-- `data_root` : absolute path to the main folder of your ActorsHQ dataset which contains subdirectories of 'Actor0X'.
-- `GG_root` : absolute path to where the Gaussian Garments repository is cloned.
+Please setup the `defaults.py` file with the necessary data paths. Note that it is assumed in our scripts that your ActorsHQ dataset is stored in the format that it is originally downloaded in.
 
-
-**Add information about defaults.py and input data structure expectations.**
-
-## Data Setup & Mesh Initialization
+## Mesh Initialization
 Run the provided script `mesh_initialization.py`:
 ```bash
 python mesh_initialization.py --subject Actor0X --sequence SequenceX
 ``` 
-This script prepares the custom data folder for gs2mesh using the provided arguments, exports the calibration data in COLMAP compatible format in 'txt' subdir, and runs our sparse COLMAP reconstruction pipeline. 
+This script prepares the custom data folder for gs2mesh using the provided arguments, exports the calibration data in COLMAP compatible format, and runs our sparse COLMAP reconstruction pipeline. 
 
 **Note:** We use our own COLMAP pipeline because gs2mesh assumes camera extrinsics information is not available, so we use our script instead of relying on their built-in COLMAP pipeline to generate a higher quality sparse mesh and provide gs2mesh with actual camera extrinsics information.
 
@@ -42,7 +37,7 @@ This script prepares the custom data folder for gs2mesh using the provided argum
 
 </details>
 
-After a successful run, the `gs2mesh/data/custom/` should contain a `subject_sequence/` subdirectory containing the following:
+After a successful run, the `gs2mesh/data/custom/` directory should contain a `subject_sequence/` subdirectory containing the following:
 ```
 subject_sequence/
     ├── txt/         
@@ -50,17 +45,17 @@ subject_sequence/
     |   ├── images.txt 
     |   └── points3D.txt 
     ├── sparse/         
-    |   ├── 0/         
-    |   |   ├── cameras.txt 
-    |   |   ├── cameras.bin 
-    |   |   ├── images.txt 
-    |   |   ├── images.bin
-    |   |   ├── points3D.txt
-    |   └── └── points3D.bin
-    ├── images/     
-    |   ├── Cam001.jpg
-    |   ├── Cam002.jpg 
-    |   └── ...
+    |   └── 0/         
+    |       ├── cameras.txt 
+    |       ├── cameras.bin 
+    |       ├── images.txt 
+    |       ├── images.bin
+    |       ├── points3D.txt
+    |       └── points3D.bin
+    └── images/     
+        ├── Cam001.jpg
+        ├── Cam002.jpg 
+        └── ...
 ```
 Where the images folder contains the first frame RGB images from each camera for this subject-sequence. Please do not move/ reorganize this folder, as it is imperative to running the subsequent gs2mesh stages. 
 
@@ -85,22 +80,29 @@ python mesh_reconstruction.py --subject Actor0X --sequence SequenceX --garment_t
 Further parameter details can be found on the [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) under [Custom Data](https://github.com/yanivw12/gs2mesh?tab=readme-ov-file#custom-data), which we suggest checking out as well.
 </details>
 
-**Helpful suggestion:** In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce the `TSDF_cleaning_threshold` default value for small garments, and increase for larger ones.
+**Helpful suggestions:** 
+1. In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce the `--TSDF_cleaning_threshold` default value by 10x for small garments, and increase for larger ones.
+2. The stages of gs2mesh are run in the following order: Gaussian Splatting, Rendering, Masking, TSDF. If you partially the script, and only wish to continue from a certain stage, you can skip the previous stage using their respective skip flags:
+    - Gaussian Splitting `--skip_GS`
+    - Rendering `--skip_rendering`
+    - Masking `--skip_masking`
+    - TSDF `--skip_TSDF`
 
-After a successful run, the `DEFAULTS.GG_root/ata/outputs/subject` should contain a `stage1/` subdirectory containing the following:
+After a successful run, the `DEFAULTS.output_root` should contain a `subject/` subdirectory containing the following:
 ```
-stage1/
-    ├── point_cloud.ply
-    ├── template.obj
-    └── sparse/     
-        └── points3D.bin
+subject/
+    └── stage1/
+        ├── point_cloud.ply
+        ├── template.obj
+        └── sparse/     
+            └── points3D.bin
 ```
 These are the minimal output requirements from Stage 1: Mesh Reconstruction, and are imperative to running the subsequent stages of Gaussian Garments.
 
-## Mask Generation
+## Data Preparation
 Use the script `mask_generation.py` to generate masks based on garment prompt. 
 ```bash
-python mask_generation.py --imgs_dir <abs path> --output_root <abs path> --prompt <garment>
+python mask_generation.py --subject Actor0X --sequence SequenceX --masker_prompt <garment>
 ```
 Note that the script generates masks only for the portrait cameras from ActorsHQ, which are specified in `config.yaml`. If you wish to generate masks for all cameras, simply add onto the camera list. However, do note that GroundingDINO produces false positives and negatives in horizontal frames, where the garment is minimally visible or completely out of frame, which we were not able to reliably curb.
 
