@@ -210,10 +210,10 @@ def main():
     args = parser.parse_args()
 
     _root, _txt, _images = prepare_gs2mesh_data_folder(args)
-    export_first_frames(args, _images)
-    export_colmap_format(args, _txt)
+    # export_first_frames(args, _images)
+    # export_colmap_format(args, _txt)
     
-    run_colmap(_root, _txt, _images, use_gpu=int(not args.no_gpu))
+    # run_colmap(_root, _txt, _images, use_gpu=int(not args.no_gpu))
 
 
 if __name__ == "__main__":
