@@ -107,8 +107,9 @@ def symlink_loop(ddir, src_name, out_root):
             if src.exists() or src.is_symlink():
                 src.unlink()  # Remove existing file or symlink
 
-            src.symlink_to(f, target_is_directory=True)
-            print(f'Created symlink: {src} ----> {f}.')
+            if cam in DEFAULTS['portrait_cams']:
+                src.symlink_to(f, target_is_directory=True)
+                print(f'Created symlink: {src} ----> {f}.')
             
 
 def generate_symlinks(in_root, out_root):
