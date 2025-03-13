@@ -20,7 +20,7 @@ elif 'ohws68' in hostname:
     DEFAULTS['data_root'] = Path(f'')
 if hostname == 'ait-server-04.inf.ethz.ch':
     DEFAULTS['GG_root'] = Path(f'/local/home/agrigorev/Workdir/Gaussian-Garments')
-    DEFAULTS['data_root'] = Path(f'/run/user/'+str(os.getuid())+f'/mnt/work/ait_datasets/zext_HumanRF_4x/')
+    DEFAULTS['data_root'] = Path(f'/mnt/work/ait_datasets/zext_HumanRF_4x/')
     DEFAULTS['output_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Outputs/')
 else:
     DEFAULTS['GG_root'] = Path(f'../Gaussian-Garments')
