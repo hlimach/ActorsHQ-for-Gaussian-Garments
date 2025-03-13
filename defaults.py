@@ -10,22 +10,25 @@ DEFAULTS = dict()
 #  Data paths
 # =============================================================================
 
+# DO NOT EDIT
+DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
+
 if 'borong-System-Product-Name' in hostname:
     DEFAULTS['GG_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments')
-
     DEFAULTS['data_root'] = Path(f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x')
-
 elif 'ohws68' in hostname:
     DEFAULTS['GG_root'] = Path(f'')
     DEFAULTS['data_root'] = Path(f'')
-
+if hostname == 'ait-server-04.inf.ethz.ch':
+    DEFAULTS['GG_root'] = Path(f'/local/home/agrigorev/Workdir/Gaussian-Garments')
+    DEFAULTS['data_root'] = Path(f'/run/user/'+str(os.getuid())+f'/mnt/work/ait_datasets/zext_HumanRF_4x/')
+    DEFAULTS['output_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Outputs/')
 else:
     DEFAULTS['GG_root'] = Path(f'../Gaussian-Garments')
     DEFAULTS['data_root'] = Path('../Gaussian-Garments/data/input')
+    DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
     
 
-# DO NOT EDIT
-DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
 
 
 # =============================================================================
