@@ -118,7 +118,8 @@ def export_colmap_format(args, _txt):
 
         rotmat = R.from_rotvec(rotvec).as_matrix()    
         rotmat, translation = convert_local_to_colmap(rotmat, translation)
-        quaternion = R.from_matrix(rotmat).as_quat(scalar_first=True)
+        quaternion = R.from_matrix(rotmat).as_quat()
+        quaternion = np.roll(quaternion, 1)
 
         image_lines += f"{cid} {quaternion[0]} {quaternion[1]} {quaternion[2]} {quaternion[3]} {translation[0]} {translation[1]} {translation[2]} {cid} {image_name}\n\n"
         camera_lines += f"{cid} PINHOLE {w} {h} {focal[0]} {focal[1]} {principal[0]} {principal[1]}\n"
