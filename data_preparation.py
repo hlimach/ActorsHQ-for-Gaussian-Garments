@@ -58,7 +58,7 @@ def generate_masks(args, in_root, out_root):
             print(f'\n\nMasking {cam} Images.\nStoring masks in {dest_path}.\n')
 
             # iterate over every JPG image in the folder
-            for i in tqdm(f.iterdir()):
+            for i in tqdm(list(f.iterdir())):
 
                     img = i.name
                     if img.split('.')[-1] not in ["jpg", "jpeg", "JPG", "JPEG"]:
