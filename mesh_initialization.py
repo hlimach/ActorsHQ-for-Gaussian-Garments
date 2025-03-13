@@ -183,6 +183,8 @@ def run_colmap(_root, _txt, _images, use_gpu=1):
     if exit_code != 0:
         logging.error(f"Image Undistortion failed with code {exit_code}. Exiting.")
         exit(exit_code)
+
+    assert False
     
     # Convert the model to .txt files
     os.system(f"colmap model_converter " +\
@@ -210,10 +212,10 @@ def main():
     args = parser.parse_args()
 
     _root, _txt, _images = prepare_gs2mesh_data_folder(args)
-    # export_first_frames(args, _images)
-    # export_colmap_format(args, _txt)
+    export_first_frames(args, _images)
+    export_colmap_format(args, _txt)
     
-    # run_colmap(_root, _txt, _images, use_gpu=int(not args.no_gpu))
+    run_colmap(_root, _txt, _images, use_gpu=int(not args.no_gpu))
 
 
 if __name__ == "__main__":
