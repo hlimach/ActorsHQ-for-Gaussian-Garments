@@ -54,7 +54,7 @@ def export_first_frames(args, _images):
         _images (Path): Path to the 'images' subfolder of the gs2mesh data folder.
     """
 
-    images_root = DEFAULTS['data_root'] / args.subject / args.sequence / args.resolution / 'rgbs'
+    images_root = DEFAULTS['AHQ_data_root'] / args.subject / args.sequence / args.resolution / 'rgbs'
 
     print(f"Copying first frames to {_images}")
     for cam in tqdm(images_root.iterdir()):
@@ -96,7 +96,7 @@ def export_colmap_format(args, _txt):
         _txt (Path): Path to the 'txt' subfolder of the gs2mesh data folder.
     """
 
-    input_csv = DEFAULTS['data_root'] / args.subject / args.sequence / args.resolution / 'calibration.csv'
+    input_csv = DEFAULTS['AHQ_data_root'] / args.subject / args.sequence / args.resolution / 'calibration.csv'
     calibration = pd.read_csv(input_csv, index_col=0)
 
     camera_lines = ""
@@ -119,6 +119,7 @@ def export_colmap_format(args, _txt):
         rotmat = R.from_rotvec(rotvec).as_matrix()    
         rotmat, translation = convert_local_to_colmap(rotmat, translation)
         quaternion = R.from_matrix(rotmat).as_quat()
+        quaternion = np.roll(quaternion, 1)
 
         image_lines += f"{cid} {quaternion[0]} {quaternion[1]} {quaternion[2]} {quaternion[3]} {translation[0]} {translation[1]} {translation[2]} {cid} {image_name}\n\n"
         camera_lines += f"{cid} PINHOLE {w} {h} {focal[0]} {focal[1]} {principal[0]} {principal[1]}\n"
