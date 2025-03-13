@@ -184,8 +184,6 @@ def run_colmap(_root, _txt, _images, use_gpu=1):
         logging.error(f"Image Undistortion failed with code {exit_code}. Exiting.")
         exit(exit_code)
 
-    assert False
-    
     # Convert the model to .txt files
     os.system(f"colmap model_converter " +\
     f"--input_path {os.path.join(_dense, 'sparse')} " +\
