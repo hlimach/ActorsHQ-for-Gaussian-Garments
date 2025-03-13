@@ -11,7 +11,6 @@ DEFAULTS = dict()
 # =============================================================================
 
 # DO NOT EDIT
-DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
 
 if 'borong-System-Product-Name' in hostname:
     DEFAULTS['GG_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments')
@@ -29,7 +28,7 @@ else:
     DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
     
 
-
+# DEFAULTS['output_root'] = DEFAULTS['GG_root'] / 'data' / 'outputs'
 
 # =============================================================================
 #  Mask generation parameters
