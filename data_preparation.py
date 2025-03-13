@@ -45,8 +45,6 @@ def generate_masks(args, in_root, out_root):
     GD_model = GD.load_model(os.path.join(GD_dir, 'groundingdino', 'config', 'GroundingDINO_SwinT_OGC.py'), os.path.join(GD_dir, 'weights', 'groundingdino_swint_ogc.pth'))
     predictor = SAM2ImagePredictor.from_pretrained("facebook/sam2-hiera-large", device=device)
 
-    in_root = in_root / 'rgbs'
-
     # iterate over all folders that start with 'Cam'
     for f in in_root.iterdir():
         cam = f.name
