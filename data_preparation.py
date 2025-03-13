@@ -61,7 +61,7 @@ def generate_masks(args, in_root, out_root):
             for i in tqdm(sorted(list(f.iterdir()))):
 
                     img = i.name
-                    print('img', img)
+                    print('i', i)
                     if img.split('.')[-1] not in ["jpg", "jpeg", "JPG", "JPEG"]:
                         continue
 
