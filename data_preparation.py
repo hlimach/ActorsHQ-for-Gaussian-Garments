@@ -104,6 +104,9 @@ def symlink_loop(ddir, src_name, out_root):
         if f.is_dir() and cam.startswith('Cam'):
             
             src = out_root / cam / src_name
+            print('src', src)
+            assert False
+            src.mkdir(parents=True, exist_ok=True)
 
             if src.exists() or src.is_symlink():
                 src.unlink()  # Remove existing file or symlink
