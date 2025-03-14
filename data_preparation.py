@@ -125,7 +125,7 @@ def main():
     out_root = setup_output_folder(args)
 
     generate_symlinks(in_root, out_root)
-    generate_masks(args, in_root / 'rgbs', out_root)
+    # generate_masks(args, in_root / 'rgbs', out_root)
 
 
 if __name__ == "__main__":
