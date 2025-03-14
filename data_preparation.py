@@ -1,4 +1,5 @@
 import os
+import shutil
 import yaml
 import torch
 import argparse
@@ -111,7 +112,7 @@ def symlink_loop(ddir, src_name, out_root):
                 print(f'Created symlink: {src} ----> {f}.')
             else:
                 if (out_root / cam).exists():
-                    (out_root / cam).rmtree()
+                    shutil.rmtree(out_root / cam)
             
 
 def generate_symlinks(in_root, out_root):
