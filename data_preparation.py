@@ -100,19 +100,15 @@ def generate_masks(args, in_root, out_root):
 def symlink_loop(ddir, src_name, out_root):
     for f in ddir.iterdir():
         cam = f.name
-        if f.is_dir() and cam.startswith('Cam'):
-            if cam in DEFAULTS['portrait_cams']:            
-                src = out_root / cam / src_name
-                src.parent.mkdir(parents=True, exist_ok=True)
+        if f.is_dir() and cam.startswith('Cam') and cam in DEFAULTS['portrait_cams']:
+            src = out_root / cam / src_name
+            src.parent.mkdir(parents=True, exist_ok=True)
 
-                if src.exists() or src.is_symlink():
-                    src.unlink()  # Remove existing file or symlink
+            if src.exists() or src.is_symlink():
+                src.unlink()  # Remove existing file or symlink
 
-                src.symlink_to(f, target_is_directory=True)
-                print(f'Created symlink: {src} ----> {f}.')
-            else:
-                if (out_root / cam).exists():
-                    shutil.rmtree(out_root / cam)
+            src.symlink_to(f, target_is_directory=True)
+            print(f'Created symlink: {src} ----> {f}.')
             
 
 def generate_symlinks(in_root, out_root):
@@ -128,7 +124,7 @@ def main():
     out_root = setup_output_folder(args)
 
     generate_symlinks(in_root, out_root)
-    # generate_masks(args, in_root / 'rgbs', out_root)
+    generate_masks(args, in_root / 'rgbs', out_root)
 
 
 if __name__ == "__main__":
