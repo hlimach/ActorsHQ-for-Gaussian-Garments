@@ -100,16 +100,18 @@ def symlink_loop(ddir, src_name, out_root):
     for f in ddir.iterdir():
         cam = f.name
         if f.is_dir() and cam.startswith('Cam'):
-            
-            src = out_root / cam / src_name
-            src.parent.mkdir(parents=True, exist_ok=True)
+            if cam in DEFAULTS['portrait_cams']:            
+                src = out_root / cam / src_name
+                src.parent.mkdir(parents=True, exist_ok=True)
 
-            if src.exists() or src.is_symlink():
-                src.unlink()  # Remove existing file or symlink
+                if src.exists() or src.is_symlink():
+                    src.unlink()  # Remove existing file or symlink
 
-            if cam in DEFAULTS['portrait_cams']:
                 src.symlink_to(f, target_is_directory=True)
                 print(f'Created symlink: {src} ----> {f}.')
+            else:
+                if (out_root / cam).exists():
+                    (out_root / cam).rmtree()
             
 
 def generate_symlinks(in_root, out_root):
