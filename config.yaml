@@ -1,4 +1,0 @@
----
-box_threshold: 0.35
-text_threshold: 0.25
-portrait_cams: ['Cam005', 'Cam006', 'Cam007', 'Cam008', 'Cam021', 'Cam022', 'Cam023', 'Cam024', 'Cam037', 'Cam038', 'Cam039', 'Cam040', 'Cam053', 'Cam054', 'Cam055', 'Cam056', 'Cam077', 'Cam078', 'Cam079', 'Cam080', 'Cam093', 'Cam094', 'Cam095', 'Cam096', 'Cam109', 'Cam110', 'Cam111', 'Cam112', 'Cam121', 'Cam122', 'Cam123', 'Cam124', 'Cam125', 'Cam126', 'Cam127', 'Cam128', 'Cam131', 'Cam132', 'Cam133', 'Cam134', 'Cam135', 'Cam136', 'Cam139', 'Cam140', 'Cam141', 'Cam142', 'Cam143', 'Cam144', 'Cam147', 'Cam148', 'Cam149', 'Cam150', 'Cam151', 'Cam152', 'Cam155', 'Cam156', 'Cam157', 'Cam158', 'Cam159', 'Cam160']

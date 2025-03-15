@@ -13,7 +13,8 @@ DEFAULTS = dict()
 # Path that is treated as the input directory for the Gaussian Garments repo.
 # The ActorsHQ dataset will be reorangized to match the input requirements for
 # the Gaussian Garments pipeline and the symlinks will be created to this path.
-# Data will NOT be duplicated here, only garment masks will be written to this path.
+# Data will NOT be duplicated here, only the generated garment masks, and 
+# unpacked smplx model for each frame will be written to this path.
 # This should be the same as the data_root set in Gaussian Garments defaults file.
 DEFAULTS['data_root'] = Path(f'')
 
@@ -25,6 +26,11 @@ DEFAULTS['data_root'] = Path(f'')
 DEFAULTS['output_root'] = Path(f'')
 
 
+# Path to where the ActorsHQ model files are stored. This directory should 
+# contain the 'smplx' subdirectory, which has male, female, neutral .npz files.
+DEFAULTS['aux_root'] = Path(f'')
+
+
 # Path to where the ActorsHQ dataset is stored, only used for reading data.
 DEFAULTS['AHQ_data_root'] = Path(f'')
 
@@ -33,6 +39,8 @@ if 'borong-System-Product-Name' in hostname:
     DEFAULTS['data_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/input')
 
     DEFAULTS['output_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/outputs')
+
+    DEFAULTS['aux_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/input')
 
     DEFAULTS['AHQ_data_root'] = Path(f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x')
 
@@ -44,6 +52,7 @@ elif hostname == 'ait-server-04.inf.ethz.ch':
     DEFAULTS['AHQ_data_root'] = Path(f'/mnt/work/ait_datasets/zext_HumanRF_4x/')
     DEFAULTS['data_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Inputs/')
     DEFAULTS['output_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Outputs/')
+    DEFAULTS['aux_root'] = Path(f'')
 
 
 # =============================================================================

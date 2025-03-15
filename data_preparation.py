@@ -1,18 +1,25 @@
 import os
 import yaml
+import smplx
 import torch
+import gdown
+import pickle
+import trimesh
+import zipfile
 import argparse
 import numpy as np
 from PIL import Image
+from tqdm import tqdm
 from pathlib import Path
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 from torchvision.ops import box_convert
+
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 import gs2mesh.third_party.GroundingDINO.groundingdino.util.inference as GD
 
 from defaults import DEFAULTS
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+gfile_id = '1DVk3k-eNbVqVCkLhGJhD_e9ILLCwhspR'
 
 
 def init_parser():
@@ -21,6 +28,7 @@ def init_parser():
     parser.add_argument("--sequence", "-q", required=True, type=str, help="Sequence folder name (e.g. Sequence1).")
     parser.add_argument("--resolution", "-r", default='4x', type=str, help="Resolution folder of ActorsHQ images (e.g. 1x).")
     parser.add_argument("--masker_prompt", "-p", required=True, type=str, help="Prompt for GroundingDINO to locate object (garment) of interest.")
+    parser.add_argument("--gender", "-g", required=True, type=str, help="Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.")
     return parser
 
 
@@ -41,9 +49,16 @@ def setup_output_folder(args):
 
 
 def generate_masks(args, in_root, out_root):
+    """
+    Generates garment masks for all the images for the subject-seq, in the 
+    same directory structure as the input folder. 
+    """
+
     GD_dir = os.path.join(os.getcwd(), "gs2mesh", 'third_party', 'GroundingDINO')
     GD_model = GD.load_model(os.path.join(GD_dir, 'groundingdino', 'config', 'GroundingDINO_SwinT_OGC.py'), os.path.join(GD_dir, 'weights', 'groundingdino_swint_ogc.pth'))
     predictor = SAM2ImagePredictor.from_pretrained("facebook/sam2-hiera-large", device=device)
+
+    print("\n\nGenerating Garment Masks...\n")
 
     # iterate over all folders that start with 'Cam'
     for f in in_root.iterdir():
@@ -93,7 +108,8 @@ def generate_masks(args, in_root, out_root):
 
                     plt.imsave(dest_path / img, mask)
             
-    plt.close('all')      
+    plt.close('all') 
+    print("\nAll Garment Masks Generated Successfully!")     
 
 
 def symlink_loop(ddir, src_name, out_root):
@@ -113,8 +129,74 @@ def symlink_loop(ddir, src_name, out_root):
             
 
 def generate_symlinks(in_root, out_root):
+    """
+    Generates symlinks for the RGB images and foreground masks as required by the Gaussian Garments pipeline.
+    """
+    print("\n\nGenerating Symlinks...\n")
     symlink_loop(in_root / 'rgbs', 'rgb_images', out_root)
     symlink_loop(in_root / 'masks', 'foreground_masks', out_root)
+    print("\nAll Symlinks Generated Successfully!")
+
+
+def unpack_smplx(args, out_root):
+    # Download the SMPLX model for ActorHQ dataset
+    print("\n\nDownloading ActorsHQ SMPLX model...")
+    smplx_zip = str(out_root / 'ActorsHQ_smplx.zip')
+    gdown.download(f"https://drive.google.com/uc?export=download&id={gfile_id}", smplx_zip, fuzzy=True, quiet=False)
+
+    # Unzip the SMPLX model
+    zip_extract = out_root / 'ActorsHQ_smplx'
+    zip_extract.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(smplx_zip, 'r') as zip_ref:
+        zip_ref.extractall(zip_extract)
+    print(f'Successfully extracted SMPLX model to {zip_extract}')
+
+    if args.sequence != 'Sequence1':
+        # raise warning
+        print("\033[91mOnly Sequence1 is supported for SMPLX model extraction.\033[0m")
+        return
+    
+    # Create output smplx folder
+    smplx_dir = out_root / 'smplx'
+    smplx_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load the .npz file of subject
+    actor_smplx = zip_extract / args.subject / args.sequence / 'smpl_params.npz'
+    data = np.load(actor_smplx)
+
+    print(f"\nUnpacking {args.subject} SMPLX model .pkl and .ply files...")
+
+    model = smplx.create(
+        model_path=DEFAULTS['aux_root'],  # Path to SMPL-X models
+        model_type="smplx", gender=args.gender, use_pca=False, batch_size=1
+    ).to(device)
+
+    for frame_id in tqdm(range(data['transl'].shape[0])):
+        frame_smplx = {}
+        for key in data.files:
+            if key != 'betas':
+                frame_smplx[key] = data[key][frame_id]
+        
+        # fill missing keys
+        frame_smplx['betas'] = data['betas'][0]
+        frame_smplx['leye_pose'] = np.array([0., 0., 0.], dtype=np.float32)
+        frame_smplx['reye_pose'] = np.array([0., 0., 0.], dtype=np.float32)
+        
+        # Save the SMPLX model .pkl file
+        pkl_path = smplx_dir / f"{frame_id:06d}.pkl"
+        with open(pkl_path, "wb") as f:
+            pickle.dump(frame_smplx, f)
+
+        # convert numpy arrays to torch tensors and pass to SMPL-X model
+        params_torch = {key: torch.tensor(value, dtype=torch.float32, device=device).unsqueeze(0) for key, value in frame_smplx.items()}
+        output = model(**params_torch)
+
+        # save the .ply file
+        vertices = output.vertices.detach().cpu().numpy().squeeze()
+        faces = model.faces
+        trimesh.Trimesh(vertices=vertices, faces=faces).export(smplx_dir / f"{frame_id:06d}.ply")
+    
+    print(f"Unpacked successfully! Files stored in {smplx_dir}\n")
 
 
 def main():
@@ -124,6 +206,7 @@ def main():
     in_root = get_input_folder(args)
     out_root = setup_output_folder(args)
 
+    unpack_smplx(args, out_root)
     generate_symlinks(in_root, out_root)
     generate_masks(args, in_root / 'rgbs', out_root)
 
