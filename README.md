@@ -9,8 +9,7 @@ git clone --recursive git@github.com:hlimach/ActorsHQ-for-Gaussian-Garments.git
 
 Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup. Then, activate the env and download the additional requirements:
 ```bash
-pip install pyacvd
-pip install munch
+pip install pyacvd munch gdown smplx
 ```
 ### Data
 Please setup the `defaults.py` file with the necessary data paths. Note that it is assumed in our scripts that your ActorsHQ dataset is stored in the format that it is originally downloaded in.
@@ -60,7 +59,7 @@ subject_sequence/
 Where the images folder contains the first frame RGB images from each camera for this subject-sequence. Please do not move/ reorganize this folder, as it is imperative to running the subsequent gs2mesh stages. 
 
 ## Mesh Reconstruction
-You may choose to either work with the interactive notebook `actorsHQ_gs2mesh.ipynb`, or run the provided file `mesh_reconstruction.py`.
+You may choose to either work with the interactive notebook `mesh_reconstruction.ipynb`, or run the provided script `mesh_reconstruction.py`.
 The notebook includes helpful visualizations, and allows masking interactively. It is recommended to use it to debug potential issues.
 
 To run the script `mesh_reconstruction.py`:
@@ -74,8 +73,9 @@ python mesh_reconstruction.py --subject Actor0X --sequence SequenceX --garment_t
 |-----------------|-----------------------------------------------------------------------------|---------------|----------|
 | `--subject`  `-s`   | Subject folder name that contains the sequence folders (e.g. Actor06).                                     | `None`        | Yes      |
 | `--sequence`   `-q` | Sequence folder name (e.g. Sequence1).                                  | `None`        | Yes      |
-| `garment_type`   `-g`  | The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.                                   | `None`          | Yes       |
-| `masker_prompt`       | Prompt for GroundingDINO to segment out the garment of intrest. A short description (e.g. green_dress) suffices.                                | `None`        | Yes       |
+| `--garment_type`   `-g`  | The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.                                   | `None`          | Yes       |
+| `--masker_prompt`       | Prompt for GroundingDINO to segment out the garment of intrest. A short description (e.g. green_dress) suffices.                                | `None`        | Yes       |
+| `--masker_automask`       | Internal gs2mesh flag that must be passed to trigger garment segmentation.                                | -        | Yes       |
 
 Further parameter details can be found on the [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) under [Custom Data](https://github.com/yanivw12/gs2mesh?tab=readme-ov-file#custom-data), which we suggest checking out as well.
 </details>
@@ -97,19 +97,45 @@ subject/
         └── sparse/     
             └── points3D.bin
 ```
-These are the minimal output requirements from Stage 1: Mesh Reconstruction, and are imperative to running the subsequent stages of Gaussian Garments.
+These are the minimal output requirements from Stage 1: Initialization, and are imperative to running the subsequent stages of Gaussian Garments. Note that you must place the `template_uv.obj` file in this subdirectory after adding garment seams as guided by Gaussian Garments.
 
 ## Data Preparation
-Use the script `mask_generation.py` to generate masks based on garment prompt. 
+Use the script `data_preparation.py` to setup the ActorsHQ data in a Gaussian Garments compatible format. 
 ```bash
-python mask_generation.py --subject Actor0X --sequence SequenceX --masker_prompt <garment>
+python data_preparation.py --subject Actor0X --sequence SequenceX --masker_prompt Prompt --gender Gender
 ```
-Note that the script generates masks only for the portrait cameras from ActorsHQ, which are specified in `config.yaml`. If you wish to generate masks for all cameras, simply add onto the camera list. However, do note that GroundingDINO produces false positives and negatives in horizontal frames, where the garment is minimally visible or completely out of frame, which we were not able to reliably curb.
+
+<details>
+<summary> Parameters (click to expand) </summary>
 
 | Parameter       | Description                                                                 | Default Value | Required |
 |-----------------|-----------------------------------------------------------------------------|---------------|----------|
-| `imgs_dir`     | The absolute path to the directory where the CamXXX folders are stored (i.e. path/to/folder that contains Cam001, Cam002, ...).                                | `None`        | Yes      |
-| `output_root`     | The absolute path to the root of the mask directory where the CamXXX folders are to be created and populated with masks (i.e. path/to/folder/masks that will get populated with Cam001, Cam002, ... folders containing mask images).                                   | `None`          | Yes       |
-| `prompt`       | Prompt for GroundingDINO to locate object (garment) of interest. A short description (e.g. green_dress) suffices.                               | `None`        | Yes       |
+| `--subject`  `-s`   | Subject folder name that contains the sequence folders (e.g. Actor06).                                     | `None`        | Yes      |
+| `--sequence`   `-q` | Sequence folder name (e.g. Sequence1).                                  | `None`        | Yes      |
+| `--masker_prompt` `-p`      | Prompt for GroundingDINO to segment out the garment of intrest. A short description (e.g. green_dress) suffices.                                | `None`        | Yes       |
+| `--gender`   `-g`  | Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.                                   | `None`          | Yes       |
+| `--resolution` `-r` | Resolution folder of ActorsHQ images (e.g. 1x).                                         | `4x`    | No       |
 
-Further parameters specific to GroundingDINO are set in `config.yaml`, which will most likely not require tuning in our use-case.
+Further parameters specific to GroundingDINO are set in `defaults.py`, which will most likely not require tuning in our use-case.
+</details>
+
+After a successful run, the `DEFAULTS.data_root` should contain a subdirectory `subject/sequence`, populated with the following:
+```
+subject/
+    └── sequence/
+        ├── Cam001
+        |   ├── *rgb_images
+        |   ├── *foreground_masks
+        |   └── garment_masks     
+        ├── Cam002
+        ├── ...
+        └── smplx
+            ├── 000000.pkl
+            ├── 000000.ply
+            ├── 000001.pkl
+            └── ...  
+```
+Where the folders `rgb_images` and `foreground_masks` are symbolic links to `Defaults.AHQ_data_root`, and `garment_masks` is physically stored at this location with the segmented garment masks for each frame.
+The `smplx` subdirectory contains the extracted SMPLX parameters for each frame of this sequence in a `.pkl` file, along with its point cloud in a `.ply` file. 
+
+**Note:** the script only generates masks for the portrait cameras from ActorsHQ, which are specified in `defaults.py`. This is because GroundingDINO produces false positives and negatives in horizontal frames, where the garment is minimally visible or completely out of frame, which we were not able to reliably curb. If you still wish to generate masks for all cameras, simply add onto the camera list.
