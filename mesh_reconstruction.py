@@ -202,7 +202,6 @@ def run_single(args):
                 "horizontal": {"subdir": next(d for d in subdir_bins if int(d.split('x')[0]) < int(d.split('x')[1])), "ref": h_ref},
             }
 
-            GD_model, renderer, stereo, args
             masker = run_full_masker(garment_dict["horizontal"], GD_model, renderer, stereo, args, images_dir)
             
             # once masks are generated, we need to store the first frame outputs 

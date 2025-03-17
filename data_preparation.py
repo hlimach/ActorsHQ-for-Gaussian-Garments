@@ -70,7 +70,7 @@ def generate_masks(args, in_root, out_root):
             dest_path = out_root / cam / 'garment_masks'
             dest_path.mkdir(parents=True, exist_ok=True)
 
-            print(f'\n\nMasking {cam} Images.\nStoring masks in {dest_path}.\n')
+            print(f'\n\nMasking {cam} Images.\nStoring masks in {dest_path}')
 
             # iterate over every JPG image in the folder
             for i in tqdm(sorted(list(f.iterdir()))):

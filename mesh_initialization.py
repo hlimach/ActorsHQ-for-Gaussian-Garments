@@ -33,6 +33,14 @@ def prepare_gs2mesh_data_folder(args):
         _images (Path): Path to the 'images' subfolder of the data folder for gs2mesh.
     """
     _root = gs2mesh_path / 'data' / 'custom' / f'{args.subject}_{args.sequence}'
+
+    if _root.exists(): 
+        delete = input("Output path already exists. Please grant permission to remove current folder. (Y/N) ")
+        if delete.lower() == 'y':
+            shutil.rmtree(_root)
+        else:
+            print("\033[91mOutput path already exists. Will cause issues in COLMAP.\033[0m")
+
     _root.mkdir(parents=True, exist_ok=True)
 
     _txt = _root / 'txt'
