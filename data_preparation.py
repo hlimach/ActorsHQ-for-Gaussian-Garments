@@ -4,6 +4,7 @@ import smplx
 import torch
 import gdown
 import pickle
+import shutil
 import trimesh
 import zipfile
 import argparse
@@ -29,6 +30,9 @@ def init_parser():
     parser.add_argument("--resolution", "-r", default='4x', type=str, help="Resolution folder of ActorsHQ images (e.g. 1x).")
     parser.add_argument("--masker_prompt", "-p", required=True, type=str, help="Prompt for GroundingDINO to locate object (garment) of interest.")
     parser.add_argument("--gender", "-g", required=True, type=str, help="Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.")
+    parser.add_argument("--skip_masking", action='store_true', help="Skip the garment masking step.")
+    parser.add_argument("--skip_symlinks", action='store_true', help="Skip the symlink generation step.")
+    parser.add_argument("--skip_smplx", action='store_true', help="Skip the SMPLX model unpacking step.")
     return parser
 
 
@@ -141,11 +145,11 @@ def generate_symlinks(in_root, out_root):
 def unpack_smplx(args, out_root):
     # Download the SMPLX model for ActorHQ dataset
     print("\n\nDownloading ActorsHQ SMPLX model...")
-    smplx_zip = str(out_root / 'ActorsHQ_smplx.zip')
+    smplx_zip = str(DEFAULTS['data_root'] / 'ActorsHQ_smplx.zip')
     gdown.download(f"https://drive.google.com/uc?export=download&id={gfile_id}", smplx_zip, fuzzy=True, quiet=False)
 
     # Unzip the SMPLX model
-    zip_extract = out_root / 'ActorsHQ_smplx'
+    zip_extract = DEFAULTS['data_root'] / 'ActorsHQ_smplx'
     zip_extract.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(smplx_zip, 'r') as zip_ref:
         zip_ref.extractall(zip_extract)
@@ -198,6 +202,10 @@ def unpack_smplx(args, out_root):
     
     print(f"Unpacked successfully! Files stored in {smplx_dir}\n")
 
+    # delete the smplx_zip file, and the zip_extract folder
+    os.remove(smplx_zip)
+    shutil.rmtree(zip_extract)
+
 
 def main():
     parser = init_parser()
@@ -206,9 +214,14 @@ def main():
     in_root = get_input_folder(args)
     out_root = setup_output_folder(args)
 
-    unpack_smplx(args, out_root)
-    generate_symlinks(in_root, out_root)
-    generate_masks(args, in_root / 'rgbs', out_root)
+    if not args.skip_symlinks:
+        generate_symlinks(in_root, out_root)
+    
+    if not args.skip_smplx:
+        unpack_smplx(args, out_root)
+
+    if not args.skip_masking:
+        generate_masks(args, in_root / 'rgbs', out_root)
 
 
 if __name__ == "__main__":
