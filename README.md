@@ -1,5 +1,5 @@
 # ActorsHQ for Gaussian Garments
-Repository to use actorsHQ dataset with gs2mesh to reconstruct 3D garment mesh.
+Official supplementary repository for [Gaussian Garments](https://ribosome-rbx.github.io/Gaussian-Garments/): Stage 1 - Garment Initialization. This repository is tailored for ActorsHQ dataset for generating segmented garment mesh using [gs2mesh](https://gs2mesh.github.io/).
 ## Setup
 ### Environment
 Start by cloning this repository:
@@ -7,12 +7,12 @@ Start by cloning this repository:
 git clone --recursive git@github.com:hlimach/ActorsHQ-for-Gaussian-Garments.git
 ```
 
-Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup. Then, activate the env and download the additional requirements:
+Follow the instructions provided on the official [gs2mesh repo](https://github.com/yanivw12/gs2mesh/tree/main) page for the environment creation & setup. Then, activate the env and install the following additional requirements:
 ```bash
 pip install pyacvd munch gdown smplx
 ```
 ### Data
-Please setup the `defaults.py` file with the necessary data paths. Note that it is assumed in our scripts that your ActorsHQ dataset is stored in the format that it is originally downloaded in.
+Setup the `defaults.py` file with the necessary data paths. Note that it is assumed in our scripts that your ActorsHQ dataset directory is in the format that it is originally downloaded in.
 
 ## Mesh Initialization
 Run the provided script `mesh_initialization.py`:
@@ -21,7 +21,7 @@ python mesh_initialization.py --subject Actor0X --sequence SequenceX
 ``` 
 This script prepares the custom data folder for gs2mesh using the provided arguments, exports the calibration data in COLMAP compatible format, and runs our sparse COLMAP reconstruction pipeline. 
 
-**Note:** We use our own COLMAP pipeline because gs2mesh assumes camera extrinsics information is not available, so we use our script instead of relying on their built-in COLMAP pipeline to generate a higher quality sparse mesh and provide gs2mesh with actual camera extrinsics information.
+**Note:** We use our own COLMAP pipeline because gs2mesh assumes camera extrinsics information is not available, so instead of relying on their built-in COLMAP pipeline, we use our own to generate a higher quality sparse mesh and provide gs2mesh with actual camera extrinsics information.
 
 <details>
 <summary> Parameters (click to expand) </summary>
@@ -35,6 +35,10 @@ This script prepares the custom data folder for gs2mesh using the provided argum
 | `--no_gpu` | Whether to use GPU for feature extraction and matching.                                    | False           | No       |
 
 </details>
+
+**Helpful suggestions:** 
+1. Ensure that the argument `--ff` is set to the number corresponding to the frame where the subject pose is appropriate for reconstruction i.e. hands are away from the body.
+2. In general, pick garments that are not occluded by other features (pants not fully visible due to shirt, shirt tucked in, hair occluding part of the top, etc).
 
 After a successful run, the `gs2mesh/data/custom/` directory should contain a `subject_sequence/` subdirectory containing the following:
 ```
@@ -56,7 +60,7 @@ subject_sequence/
         ├── Cam002.jpg 
         └── ...
 ```
-Where the images folder contains the first frame RGB images from each camera for this subject-sequence. Please do not move/ reorganize this folder, as it is imperative to running the subsequent gs2mesh stages. 
+Where the images folder contains the specified 'first frame' RGB images from each camera for this subject-sequence. Please do not move/ reorganize this folder, as it is imperative to running the subsequent gs2mesh stages. 
 
 ## Mesh Reconstruction
 You may choose to either work with the interactive notebook `mesh_reconstruction.ipynb`, or run the provided script `mesh_reconstruction.py`.
@@ -82,7 +86,7 @@ Further parameter details can be found on the [gs2mesh repo](https://github.com/
 
 **Helpful suggestions:** 
 1. In case the garment mesh is generated but cleaned mesh has 0 vertices, reduce the `--TSDF_cleaning_threshold` default value by 10x for small garments, and increase for larger ones.
-2. The stages of gs2mesh are run in the following order: Gaussian Splatting, Rendering, Masking, TSDF. If you partially the script, and only wish to continue from a certain stage, you can skip the previous stage using their respective skip flags:
+2. The stages of gs2mesh are run in the following order: Gaussian Splatting, Rendering, Masking, TSDF. If you only wish to continue your run from a certain stage, you can skip the previous stages using their respective skip flags:
     - Gaussian Splitting `--skip_GS`
     - Rendering `--skip_rendering`
     - Masking `--skip_masking`
@@ -97,7 +101,7 @@ subject/
         └── sparse/     
             └── points3D.bin
 ```
-These are the minimal output requirements from Stage 1: Initialization, and are imperative to running the subsequent stages of Gaussian Garments. Note that you must place the `template_uv.obj` file in this subdirectory after adding garment seams as guided by Gaussian Garments.
+These are the minimal output requirements from Stage 1: Garment Initialization, and are imperative to running the subsequent stages of Gaussian Garments. Note that you must place the `template_uv.obj` file in this subdirectory after manually adding garment seams as required by Gaussian Garments.
 
 ## Data Preparation
 Use the script `data_preparation.py` to setup the ActorsHQ data in a Gaussian Garments compatible format. 
