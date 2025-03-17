@@ -1,5 +1,6 @@
 import os
 import yaml
+import json
 import smplx
 import torch
 import gdown
@@ -9,11 +10,13 @@ import trimesh
 import zipfile
 import argparse
 import numpy as np
+import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
 import matplotlib.pyplot as plt
 from torchvision.ops import box_convert
+from scipy.spatial.transform import Rotation as R
 
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 import gs2mesh.third_party.GroundingDINO.groundingdino.util.inference as GD
@@ -33,6 +36,7 @@ def init_parser():
     parser.add_argument("--skip_masking", action='store_true', help="Skip the garment masking step.")
     parser.add_argument("--skip_symlinks", action='store_true', help="Skip the symlink generation step.")
     parser.add_argument("--skip_smplx", action='store_true', help="Skip the SMPLX model unpacking step.")
+    parser.add_argument("--skip_json", action='store_true', help="Skip the calibration file conversion.")
     return parser
 
 
@@ -114,6 +118,45 @@ def generate_masks(args, in_root, out_root):
             
     plt.close('all') 
     print("\nAll Garment Masks Generated Successfully!")     
+
+
+def write_json(in_root, out_root):
+    """
+    Converts the calibration.csv file to cameras.json format.
+    """
+    print("\n\nConverting calibration.csv to cameras.json...")
+
+    calib_file = in_root / 'calibration.csv'
+    df = pd.read_csv(calib_file)
+    cam_dict = {}
+
+    for index, row in df.iterrows():
+        cam_id = row["name"]
+        cam_dict[cam_id] = {}
+        cam_dict[cam_id]["ids"] = int(cam_id[3:])
+
+        rotation_mat = R.from_rotvec(row[["rx", "ry", "rz"]].values).as_matrix()
+        translation = row[["tx", "ty", "tz"]].values.tolist()
+        cam_dict[cam_id]["extrinsics"] = np.concatenate([rotation_mat, np.array(translation).reshape(3, 1)], axis=1).tolist()
+
+        h, w = int(row["h"]), int(row["w"])
+        cam_dict[cam_id]["shape"] = [h, w]
+
+        fx = row["fx"] * w
+        fy = row["fy"] * h
+        px = row["px"] * w
+        py = row["py"] * h
+        intrinsics = np.array([
+            [fx,  0, px],
+            [ 0, fy, py],
+            [ 0,  0,  1]
+        ])
+        cam_dict[cam_id]["intrinsics"] = intrinsics.tolist()
+
+    with open(out_root / 'cameras.json', 'w') as f:
+        json.dump(cam_dict, f, indent=4)
+
+    print(f"Conversion Successful! JSON file cameras.json stored in {out_root}")
 
 
 def symlink_loop(ddir, src_name, out_root):
@@ -216,6 +259,9 @@ def main():
 
     if not args.skip_symlinks:
         generate_symlinks(in_root, out_root)
+
+    if not args.skip_json:
+        write_json(in_root, out_root)
     
     if not args.skip_smplx:
         unpack_smplx(args, out_root)

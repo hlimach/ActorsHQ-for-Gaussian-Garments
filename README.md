@@ -119,6 +119,11 @@ python data_preparation.py --subject Actor0X --sequence SequenceX --masker_promp
 | `--masker_prompt` `-p`      | Prompt for GroundingDINO to segment out the garment of intrest. A short description (e.g. green_dress) suffices.                                | `None`        | Yes       |
 | `--gender`   `-g`  | Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.                                   | `None`          | Yes       |
 | `--resolution` `-r` | Resolution folder of ActorsHQ images (e.g. 1x).                                         | `4x`    | No       |
+| `--skip_masking` | Skip the garment masking step.                                         | False    | No       |
+| `--skip_symlinks` | Skip the symlink generation step.                                         | False    | No       |
+| `--skip_smplx` | Skip the SMPLX model unpacking step.                                         | False    | No       |
+| `--skip_json` | Skip the calibration file conversion.                                         | False    | No       |
+
 
 Further parameters specific to GroundingDINO are set in `defaults.py`, which will most likely not require tuning in our use-case.
 </details>
