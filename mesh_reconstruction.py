@@ -175,6 +175,7 @@ def run_single(args):
     # =============================================================================
     
     if not args.skip_rendering:
+        shutil.rmtree(strings['output_dir_root'])
         stereo.run(start=0, visualize=False)
 
     # =============================================================================
