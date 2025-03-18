@@ -181,10 +181,10 @@ def write_json(in_root, out_root):
     print(f"Conversion Successful! JSON file cameras.json stored in {out_root}")
 
 
-def symlink_loop(ddir, src_name, out_root):
+def symlink_loop(args, ddir, src_name, out_root):
     for f in ddir.iterdir():
         cam = f.name
-        if f.is_dir() cam in DEFAULTS[args.garment_type.lower()]:
+        if f.is_dir() and cam in DEFAULTS[args.garment_type.lower()]:
             src = out_root / cam / src_name
             src.parent.mkdir(parents=True, exist_ok=True)
 
@@ -195,13 +195,13 @@ def symlink_loop(ddir, src_name, out_root):
             print(f'Created symlink: {src} ----> {f}.')
             
 
-def generate_symlinks(in_root, out_root):
+def generate_symlinks(args, in_root, out_root):
     """
     Generates symlinks for the RGB images and foreground masks as required by the Gaussian Garments pipeline.
     """
     print("\n\nGenerating Symlinks...\n")
-    symlink_loop(in_root / 'rgbs', 'rgb_images', out_root)
-    symlink_loop(in_root / 'masks', 'foreground_masks', out_root)
+    symlink_loop(args, in_root / 'rgbs', 'rgb_images', out_root)
+    symlink_loop(args, in_root / 'masks', 'foreground_masks', out_root)
     print("\nAll Symlinks Generated Successfully!")
 
 
@@ -281,7 +281,7 @@ def main():
         generate_masks(args, in_root / 'rgbs', out_root)
 
     if not args.skip_symlinks:
-        generate_symlinks(in_root, out_root)
+        generate_symlinks(args, in_root, out_root)
 
     if not args.skip_json:
         write_json(in_root, out_root)
