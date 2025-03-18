@@ -52,7 +52,7 @@ elif hostname == 'ait-server-04.inf.ethz.ch':
     DEFAULTS['AHQ_data_root'] = Path(f'/mnt/work/ait_datasets/zext_HumanRF_4x/')
     DEFAULTS['data_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Inputs/')
     DEFAULTS['output_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Outputs/')
-    DEFAULTS['aux_root'] = Path(f'')
+    DEFAULTS['aux_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/aux_data/')
 
 
 # =============================================================================
