@@ -121,7 +121,7 @@ def generate_masks(args, in_root, out_root):
     print("\nAll Garment Masks Generated Successfully!")     
 
 
-def convert_local_to_colmap(R_local, t_local):
+def convert_local_to_global(R_local, t_local):
     """
     Convert camera extrinsics from camera-to-world (local) to world-to-camera (global)
     as used by COLMAP.
@@ -154,12 +154,12 @@ def write_json(in_root, out_root):
         cam_dict[cam_id]["ids"] = int(cam_id[3:])
 
         rotation_mat = R.from_rotvec(row[["rx", "ry", "rz"]].values).as_matrix()
-        translation = np.array(row[["tx", "ty", "tz"]].values.tolist())
+        translation = np.array(row[["tx", "ty", "tz"]].values.tolist())[:, None]
 
         print('rotation_mat', rotation_mat.shape)
         print('translation', translation.shape)
 
-        rotation_mat, translation = convert_local_to_colmap(rotation_mat, translation)
+        rotation_mat, translation = convert_local_to_global(rotation_mat, translation)
 
         cam_dict[cam_id]["extrinsics"] = np.concatenate([rotation_mat, np.array(translation).reshape(3, 1)], axis=1).tolist()
 
