@@ -34,6 +34,7 @@ def init_parser():
     parser.add_argument("--resolution", "-r", default='4x', type=str, help="Resolution folder of ActorsHQ images (e.g. 1x).")
     parser.add_argument("--masker_prompt", "-p", required=True, type=str, help="Prompt for GroundingDINO to locate object (garment) of interest.")
     parser.add_argument("--gender", "-g", required=True, type=str, help="Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.")
+    parser.add_argument("--garment_type", "-gt", required=True, type=str, help="The garment label to be processed, must be one of [upper, lower, dress], where upper corresponds to tops, sweaters, jackets, etc., lower corresponds to pants, shorts, etc., and dress is self-explanatory.")
     parser.add_argument("--skip_masking", action='store_true', help="Skip the garment masking step.")
     parser.add_argument("--skip_symlinks", action='store_true', help="Skip the symlink generation step.")
     parser.add_argument("--skip_smplx", action='store_true', help="Skip the SMPLX model unpacking step.")
@@ -73,7 +74,7 @@ def generate_masks(args, in_root, out_root):
     for f in in_root.iterdir():
         cam = f.name
         
-        if f.is_dir() and cam in DEFAULTS['portrait_cams']:
+        if f.is_dir() and cam in DEFAULTS[args.garment_type.lower()]:
             
             # create the destination folder
             dest_path = out_root / cam / 'garment_masks'
@@ -183,7 +184,7 @@ def write_json(in_root, out_root):
 def symlink_loop(ddir, src_name, out_root):
     for f in ddir.iterdir():
         cam = f.name
-        if f.is_dir() and cam.startswith('Cam') and cam in DEFAULTS['portrait_cams']:
+        if f.is_dir() cam in DEFAULTS[args.garment_type.lower()]:
             src = out_root / cam / src_name
             src.parent.mkdir(parents=True, exist_ok=True)
 
@@ -276,6 +277,9 @@ def main():
     in_root = get_input_folder(args)
     out_root = setup_output_folder(args)
 
+    if not args.skip_masking:
+        generate_masks(args, in_root / 'rgbs', out_root)
+
     if not args.skip_symlinks:
         generate_symlinks(in_root, out_root)
 
@@ -285,8 +289,7 @@ def main():
     if not args.skip_smplx:
         unpack_smplx(args, out_root)
 
-    if not args.skip_masking:
-        generate_masks(args, in_root / 'rgbs', out_root)
+    
 
 
 if __name__ == "__main__":
