@@ -175,6 +175,7 @@ def run_single(args):
     # =============================================================================
     
     if not args.skip_rendering:
+        shutil.rmtree(strings['output_dir_root'])
         stereo.run(start=0, visualize=False)
 
     # =============================================================================
@@ -202,7 +203,6 @@ def run_single(args):
                 "horizontal": {"subdir": next(d for d in subdir_bins if int(d.split('x')[0]) < int(d.split('x')[1])), "ref": h_ref},
             }
 
-            GD_model, renderer, stereo, args
             masker = run_full_masker(garment_dict["horizontal"], GD_model, renderer, stereo, args, images_dir)
             
             # once masks are generated, we need to store the first frame outputs 
