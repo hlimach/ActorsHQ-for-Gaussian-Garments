@@ -156,9 +156,6 @@ def write_json(in_root, out_root):
         rotation_mat = R.from_rotvec(row[["rx", "ry", "rz"]].values).as_matrix()
         translation = np.array(row[["tx", "ty", "tz"]].values.tolist())[:, None]
 
-        print('rotation_mat', rotation_mat.shape)
-        print('translation', translation.shape)
-
         rotation_mat, translation = convert_local_to_global(rotation_mat, translation)
 
         cam_dict[cam_id]["extrinsics"] = np.concatenate([rotation_mat, np.array(translation).reshape(3, 1)], axis=1).tolist()
