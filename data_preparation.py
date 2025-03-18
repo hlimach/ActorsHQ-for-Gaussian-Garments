@@ -121,6 +121,23 @@ def generate_masks(args, in_root, out_root):
     print("\nAll Garment Masks Generated Successfully!")     
 
 
+def convert_local_to_colmap(R_local, t_local):
+    """
+    Convert camera extrinsics from camera-to-world (local) to world-to-camera (global)
+    as used by COLMAP.
+    
+    Parameters:
+      R_local (np.ndarray): 3x3 rotation matrix (camera-to-world)
+      t_local (np.ndarray): 3x1 translation vector (camera position in world coords)
+    
+    Returns:
+      R_global (np.ndarray): 3x3 rotation matrix (world-to-camera)
+      t_global (np.ndarray): 3x1 translation vector (as expected by COLMAP)
+    """
+    R_global = R_local.T
+    t_global = - R_local.T @ t_local
+    return R_global, t_global
+
 def write_json(in_root, out_root):
     """
     Converts the calibration.csv file to cameras.json format.
@@ -137,7 +154,13 @@ def write_json(in_root, out_root):
         cam_dict[cam_id]["ids"] = int(cam_id[3:])
 
         rotation_mat = R.from_rotvec(row[["rx", "ry", "rz"]].values).as_matrix()
-        translation = row[["tx", "ty", "tz"]].values.tolist()
+        translation = np.array(row[["tx", "ty", "tz"]].values.tolist())
+
+        print('rotation_mat', rotation_mat.shape)
+        print('translation', translation.shape)
+
+        rotation_mat, translation = convert_local_to_colmap(rotation_mat, translation)
+
         cam_dict[cam_id]["extrinsics"] = np.concatenate([rotation_mat, np.array(translation).reshape(3, 1)], axis=1).tolist()
 
         h, w = int(row["h"]), int(row["w"])
