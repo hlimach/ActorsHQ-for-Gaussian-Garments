@@ -212,8 +212,6 @@ def unpack_smplx(args, out_root):
 
     print(f"\nUnpacking {args.subject} SMPLX model .pkl and .ply files...")
 
-    print("DEFAULTS['aux_root']", DEFAULTS['aux_root'])
-
     model = smplx.create(
         model_path=DEFAULTS['aux_root'],  # Path to SMPL-X models
         model_type="smplx", gender=args.gender, use_pca=False, batch_size=1
