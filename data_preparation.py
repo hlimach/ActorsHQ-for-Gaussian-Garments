@@ -116,7 +116,8 @@ def generate_masks(args, in_root, out_root):
                         mask = masks[np.argmax(scores), :, :]
                         predictor.reset_predictor()
 
-                    plt.imsave(dest_path / img, mask)
+                    out_path = (dest_path / img).with_suffix('.png')
+                    plt.imsave(out_path, mask)
             
     plt.close('all') 
     print("\nAll Garment Masks Generated Successfully!")     
