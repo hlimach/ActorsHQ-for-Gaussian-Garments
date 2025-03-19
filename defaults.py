@@ -35,26 +35,6 @@ DEFAULTS['aux_root'] = Path(f'')
 DEFAULTS['AHQ_data_root'] = Path(f'')
 
 
-if 'borong-System-Product-Name' in hostname:
-    DEFAULTS['data_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/input')
-
-    DEFAULTS['output_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/outputs')
-
-    DEFAULTS['aux_root'] = Path(f'/home/hramzan/Desktop/semester-project/Gaussian-Garments/data/input')
-
-    DEFAULTS['AHQ_data_root'] = Path(f'/run/user/'+str(os.getuid())+f'/gvfs/smb-share:server=mocap-stor-02.inf.ethz.ch,share=work/ait_datasets/zext_HumanRF_4x')
-
-elif 'ohws68' in hostname:
-    DEFAULTS['GG_root'] = Path(f'')
-    DEFAULTS['data_root'] = Path(f'')
-
-elif hostname == 'ait-server-04.inf.ethz.ch':
-    DEFAULTS['AHQ_data_root'] = Path(f'/mnt/work/ait_datasets/zext_HumanRF_4x/')
-    DEFAULTS['data_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Inputs/')
-    DEFAULTS['output_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/Outputs/')
-    DEFAULTS['aux_root'] = Path(f'/data/agrigorev/02_Projects/opengaga/aux_data/')
-
-
 # =============================================================================
 # Mask generation parameters
 # =============================================================================
