@@ -101,7 +101,9 @@ subject/
         └── sparse/     
             └── points3D.bin
 ```
-These are the minimal output requirements from Stage 1: Garment Initialization, and are imperative to running the subsequent stages of Gaussian Garments. Note that you must place the `template_uv.obj` file in this subdirectory after manually adding garment seams as required by Gaussian Garments.
+These are the minimal output requirements from Stage 1: Garment Initialization, and are imperative to running the subsequent stages of Gaussian Garments. 
+
+**Important:** You must use `template.obj` file and create the `template_uv.obj` by manually adding garment seams. Place this file in this subdirectory as it is required by the subsequent Gaussian Garments stages. To add garment seams, you may consult the various online resources available for UV unwrapping a mesh in blender. Note that you may edit the mesh as well in case of deformations. 
 
 ## Data Preparation
 Use the script `data_preparation.py` to setup the ActorsHQ data in a Gaussian Garments compatible format. 
