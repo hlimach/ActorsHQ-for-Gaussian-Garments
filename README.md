@@ -122,10 +122,10 @@ python data_preparation.py --subject Actor0X --sequence SequenceX --masker_promp
 | `--gender`   `-g`  | Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.                                   | `None`          | Yes       |
 | `--resolution` `-r` | Resolution folder of ActorsHQ images (e.g. 1x).                                         | `4x`    | No       |
 | `--skip_masking` | Skip the garment masking step.                                         | False    | No       |
-| `--skip_symlinks` | Skip the symlink generation step.                                         | False    | No       |
 | `--skip_smplx` | Skip the SMPLX model unpacking step.                                         | False    | No       |
 | `--skip_json` | Skip the calibration file conversion.                                         | False    | No       |
-
+| `--skip_reorg` | Skip the data reorganization step.                                         | False    | No       |
+| `--copy_data` | physically copies data instead of just generating symlinks in data reorganization step.                                         | False    | No       |
 
 Further parameters specific to GroundingDINO are set in `defaults.py`, which will most likely not require tuning in our use-case.
 </details>
@@ -146,7 +146,8 @@ subject/
             ├── 000001.pkl
             └── ...  
 ```
-Where the folders `rgb_images` and `foreground_masks` are symbolic links to `Defaults.AHQ_data_root`, and `garment_masks` is physically stored at this location with the segmented garment masks for each frame.
-The `smplx` subdirectory contains the extracted SMPLX parameters for each frame of this sequence in a `.pkl` file, along with its point cloud in a `.ply` file. 
+Where the folders `rgb_images` and `foreground_masks` are symbolic links to `Defaults.AHQ_data_root`, and `garment_masks` is physically stored at this location with the segmented garment masks for each frame. The `smplx` subdirectory contains the extracted SMPLX parameters for each frame of this sequence in a `.pkl` file, along with its point cloud in a `.ply` file. 
+
+If you wish to physically copy the data during the data reorganization stage, instead of just generating symbolically linked folders, then use the flag `--copy_data`.
 
 **Note:** the script only generates masks for the portrait cameras from ActorsHQ, which are specified in `defaults.py`. This is because GroundingDINO produces false positives and negatives in horizontal frames, where the garment is minimally visible or completely out of frame, which we were not able to reliably curb. If you still wish to generate masks for all cameras, simply add onto the camera list.
