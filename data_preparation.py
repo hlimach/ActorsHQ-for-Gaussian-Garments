@@ -35,7 +35,8 @@ def init_parser():
     parser.add_argument("--masker_prompt", "-p", required=True, type=str, help="Prompt for GroundingDINO to locate object (garment) of interest.")
     parser.add_argument("--gender", "-g", required=True, type=str, help="Gender of the SMPLX model, must be one of [male, female], corresponding to gender of subject.")
     parser.add_argument("--skip_masking", action='store_true', help="Skip the garment masking step.")
-    parser.add_argument("--skip_symlinks", action='store_true', help="Skip the symlink generation step.")
+    parser.add_argument("--skip_reorg", action='store_true', help="Skip the data reorganization step.")
+    parser.add_argument("--copy_data", action='store_true', help="Physically copies data instead of just generating symlinks in data reorganization step.")
     parser.add_argument("--skip_smplx", action='store_true', help="Skip the SMPLX model unpacking step.")
     parser.add_argument("--skip_json", action='store_true', help="Skip the calibration file conversion.")
     return parser
@@ -185,28 +186,47 @@ def write_json(in_root, out_root):
     print(f"Conversion Successful! JSON file cameras.json stored in {out_root}")
 
 
-def symlink_loop(ddir, src_name, out_root):
+def folder_loop(ddir, src_name, out_root, copy_data):
     for f in ddir.iterdir():
         cam = f.name
-        if f.is_dir() and cam.startswith('Cam') and cam in DEFAULTS['portrait_cams']:
+        if f.is_dir() and cam in DEFAULTS['portrait_cams']:
             src = out_root / cam / src_name
             src.parent.mkdir(parents=True, exist_ok=True)
 
-            if src.exists() or src.is_symlink():
-                src.unlink()  # Remove existing file or symlink
+            if copy_data:
+                if src.exists():
+                    if src.is_symlink():
+                        src.unlink()
+                    else:
+                        shutil.rmtree(src)
 
-            src.symlink_to(f, target_is_directory=True)
-            print(f'Created symlink: {src} ----> {f}.')
+                total_files = sum(1 for _ in src.rglob("*.*"))
+                with tqdm(total=total_files, unit=f" files done.", desc=f"Copying {cam} data") as pbar:
+                    def copy_func(f, src):
+                        shutil.copy2(f, src)
+                        pbar.update(1)
+
+                    shutil.copytree(f, src, copy_function=copy_func)
+
+            else:
+                if src.exists() or src.is_symlink():
+                    src.unlink()  # Remove existing file or symlink
+
+                src.symlink_to(f, target_is_directory=True)
+                print(f'Created symlink: {src} ----> {f}.')
             
 
-def generate_symlinks(in_root, out_root):
+def reorganize_data(in_root, out_root, copy_data):
     """
     Generates symlinks for the RGB images and foreground masks as required by the Gaussian Garments pipeline.
     """
-    print("\n\nGenerating Symlinks...\n")
-    symlink_loop(in_root / 'rgbs', 'rgb_images', out_root)
-    symlink_loop(in_root / 'masks', 'foreground_masks', out_root)
-    print("\nAll Symlinks Generated Successfully!")
+    print("\n\nReorganizing RGB Images...\n")
+    folder_loop(in_root / 'rgbs', 'rgb_images', out_root, copy_data)
+
+    print("\n\nReorganizing Masks...\n")
+    folder_loop(in_root / 'masks', 'foreground_masks', out_root, copy_data)
+    
+    print("\n\nData Reorganized Successfully!")
 
 
 def unpack_smplx(args, out_root):
@@ -281,8 +301,8 @@ def main():
     in_root = get_input_folder(args)
     out_root = setup_output_folder(args)
 
-    if not args.skip_symlinks:
-        generate_symlinks(in_root, out_root)
+    if not args.skip_reorg:
+        reorganize_data(in_root, out_root, args.copy_data)
 
     if not args.skip_json:
         write_json(in_root, out_root)
