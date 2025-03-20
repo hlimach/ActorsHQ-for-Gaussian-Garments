@@ -112,10 +112,14 @@ def generate_masks(args, in_root, out_root):
                         image = Image.open(img_path)
                         predictor.set_image(np.array(image.convert("RGB")))
                         masks, scores, logits = predictor.predict(box=boxes)
+
+                        # save mask with highest score
                         mask = masks[np.argmax(scores), :, :]
+                        mask = (mask > 0).astype(np.uint8)
                         predictor.reset_predictor()
 
-                    plt.imsave(dest_path / img, mask)
+                    mask_name = img.split('.')[0] + '.png'
+                    plt.imsave(dest_path / mask_name, mask)
             
     plt.close('all') 
     print("\nAll Garment Masks Generated Successfully!")     
@@ -137,6 +141,7 @@ def convert_local_to_global(R_local, t_local):
     R_global = R_local.T
     t_global = - R_local.T @ t_local
     return R_global, t_global
+
 
 def write_json(in_root, out_root):
     """
